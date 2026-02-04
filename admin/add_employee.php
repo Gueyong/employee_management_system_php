@@ -9,7 +9,40 @@ checkAdminAuth();
 $success = "";
 $error = "";
 
-if ($_SERVER[""])
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    $first_name  = sanitize($_POST["first_name"]);
+    $last_name   = sanitize($_POST["last_name"]);
+    $email       = sanitize($_POST["email"]);
+    $phone       = sanitize($_POST["phone"]);
+    $department_id = sanitize($_POST["department_id"]);
+    $daily_rate = (float)$_POST["daily_rate"];
+    $password = sanitize($_POST["password"]);
+    $confirm_password = sanitize($_POST["confirm_password"]);
+
+    if ($password != $confirm_password) {
+        $error = "Passwords do not match.";
+    } else {
+
+        do{
+            $employee_id = generateEmployeeId();
+
+        }while (employeeIdExits($conn, $employee_id));
+
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        $sql = "INSERT INTO employees (employee_id,first_name, last_name, email, phone, department_id, daily_rate, password, hire_date) 
+        VALUES (?,?, ?, ?, ?, ?, ?, ?, CURDATE())";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssssid",$employee_id, $first_name, $last_name,
+         $email, $phone, $password, $department_id,$hashed_password, $daily_rate);
+
+
+
+        $sql = "INSERT INTO employees (first_name, last_name, email, phone, department_id) VALUES (?, ?, ?, ?, ?)";
+    }
+}
 
 
 
@@ -18,12 +51,14 @@ $departments = getAllDepartments($conn);
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Employee</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Navigation -->
@@ -44,51 +79,51 @@ $departments = getAllDepartments($conn);
         </div>
 
         <h2>Add New Employee</h2>
-        
-        <?php 
+
+        <?php
         if ($success) echo "<div class='success'>$success</div>";
         if ($error) echo "<div class='error'>$error</div>";
         ?>
-        
+
         <form method="POST" action="">
             <h3>Personal Information</h3>
-            
+
             <label>First Name *</label>
             <input type="text" name="first_name" required>
-            
+
             <label>Last Name *</label>
             <input type="text" name="last_name" required>
-            
+
             <label>Email *</label>
             <input type="email" name="email" required>
-            
+
             <label>Phone</label>
             <input type="text" name="phone" placeholder="e.g. +1234567890">
-            
+
             <h3>Employment Details</h3>
-            
+
             <label>Department</label>
             <select name="department_id">
                 <option value="">-- Select Department --</option>
-                <?php while($dept = $departments->fetch_assoc()): ?>
+                <?php while ($dept = $departments->fetch_assoc()): ?>
                     <option value="<?php echo $dept['id']; ?>">
                         <?php echo $dept['department_name']; ?>
                     </option>
                 <?php endwhile; ?>
             </select>
-            
+
             <label>Daily Rate (Salary per day) *</label>
             <input type="number" name="daily_rate" step="0.01" value="0.00" required>
             <small style="color: #666;">Amount employee earns per validated presence day</small>
-            
+
             <h3>Account Credentials</h3>
-            
+
             <label>Password *</label>
             <input type="password" name="password" required>
-            
+
             <label>Confirm Password *</label>
             <input type="password" name="confirm_password" required>
-            
+
             <button type="submit">Create Employee</button>
             <button type="button" class="btn-secondary" onclick="window.location.href='dashboard.php'">
                 Cancel
@@ -96,4 +131,5 @@ $departments = getAllDepartments($conn);
         </form>
     </div>
 </body>
+
 </html>
