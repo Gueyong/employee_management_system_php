@@ -48,3 +48,10 @@ function employeeIdExits($conn, $employee_id){
     $result = $stmt->get_result();
     return $result->num_rows > 0;
 }
+
+
+function getAllDepartments($conn){
+    $sql = "SELECT * FROM departments 
+    ORDER BY department_name ASC";
+    return $conn->query($sql);
+}
